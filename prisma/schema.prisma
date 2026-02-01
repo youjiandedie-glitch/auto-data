@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  name         String
+  stockSymbol  String        @unique
+  market       String        // A, HK, US
+  logoUrl      String?
+  stockPrices  StockPrice[]
+  salesRecords SalesRecord[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model StockPrice {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  date         DateTime
+  closePrice   Float
+  
+  @@unique([companyId, date])
+}
+
+model SalesRecord {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  date         DateTime
+  volume       Int
+  periodType   String   // WEEK, MONTH, YEAR
+  
+  @@unique([companyId, date, periodType])
+}

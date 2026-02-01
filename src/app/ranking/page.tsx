@@ -121,6 +121,7 @@ export default function RankingPage() {
                         >
                             <option value="GASGOO">盖世汽车数据 (Gasgoo)</option>
                             <option value="CPCA">乘联会数据 (CPCA)</option>
+                            <option value="DCD">懂车帝实测数据 (DCD)</option>
                         </select>
                     </div>
                 </div>

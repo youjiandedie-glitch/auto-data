@@ -15,8 +15,24 @@ model Company {
   logoUrl      String?
   stockPrices  StockPrice[]
   salesRecords SalesRecord[]
+  carModels    CarModel[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+}
+
+model CarModel {
+  id           String        @id @default(cuid())
+  name         String
+  category     String?       // SUV, Sedan, MPV
+  energyType   String?       // BEV, PHEV, EREV, ICE
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id])
+  salesRecords SalesRecord[]
+  priceRecords PriceRecord[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([companyId, name])
 }
 
 model StockPrice {
@@ -33,10 +49,35 @@ model SalesRecord {
   id           String   @id @default(cuid())
   companyId    String
   company      Company  @relation(fields: [companyId], references: [id])
+  modelId      String?
+  model        CarModel? @relation(fields: [modelId], references: [id])
   date         DateTime
   volume       Int
   source       String   @default("GASGOO") // GASGOO, CPCA
   periodType   String   // WEEK, MONTH, YEAR
   
-  @@unique([companyId, date, periodType, source])
+  @@unique([companyId, modelId, date, periodType, source])
+}
+
+model PriceRecord {
+  id            String   @id @default(cuid())
+  modelId       String
+  model         CarModel @relation(fields: [modelId], references: [id])
+  date          DateTime
+  guidePrice    Float?   // 指导价
+  terminalPrice Float?   // 终端价
+  discountRate  Float?   // 折扣率
+  source        String   @default("YICHE") // YICHE, AUTOHOME
+
+  @@unique([modelId, date, source])
+}
+
+model Policy {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  category    String   // SUBSIDY, REGULATION, TAX
+  impactLevel String   // HIGH, MEDIUM, LOW
+  createdAt   DateTime @default(now())
 }

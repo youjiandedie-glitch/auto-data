@@ -5,12 +5,15 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setGranularity, setLoading, setError, setTimeRange, setDataSource, setCustomRange } from "@/store/slices/chartSlice";
 import MainChart from "./charts/MainChart";
 import CompanyPicker from "./CompanyPicker";
-import { TrendingUp, BarChart2, RefreshCw, Calendar, ChevronDown } from "lucide-react";
+import { RefreshCw, ChevronDown } from "lucide-react";
 
 export default function AnalyticsDashboard() {
     const dispatch = useAppDispatch();
     const { selectedCompanies, granularity, isLoading, timeRange, dataSource, customStartDate, customEndDate } = useAppSelector(state => state.chart);
-    const [chartData, setChartData] = useState<any>(null);
+    const [chartData, setChartData] = useState<{
+        stockSeries: any[];
+        salesSeries: any[];
+    } | null>(null);
 
     const fetchData = useCallback(async () => {
         if (selectedCompanies.length === 0) return;
@@ -23,12 +26,13 @@ export default function AnalyticsDashboard() {
 
             if (data.error) throw new Error(data.error);
             setChartData(data);
-        } catch (err: any) {
-            dispatch(setError(err.message));
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            dispatch(setError(message));
         } finally {
             dispatch(setLoading(false));
         }
-    }, [selectedCompanies, granularity, dispatch]);
+    }, [selectedCompanies, granularity, dataSource, dispatch]);
 
     useEffect(() => {
         fetchData();
@@ -150,7 +154,13 @@ export default function AnalyticsDashboard() {
                             <RefreshCw size={32} className="text-blue-500 animate-spin" />
                         </div>
                     )}
-                    <MainChart data={chartData} onZoom={handleZoom} />
+                    <MainChart
+                        data={chartData}
+                        onZoom={handleZoom}
+                        timeRange={timeRange}
+                        customStart={customStartDate}
+                        customEnd={customEndDate}
+                    />
                 </div>
             </div>
         </div>

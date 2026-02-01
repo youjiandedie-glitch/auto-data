@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "深度分析中国新能源及传统车企的销量增长与股价表现的关联性。",
 };
 
+import Sidebar from "@/components/Sidebar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +31,14 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} font-sans antialiased bg-slate-50 text-slate-900`}
       >
         <ReduxProvider>
-          {children}
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+              <div className="max-w-7xl mx-auto">
+                {children}
+              </div>
+            </main>
+          </div>
         </ReduxProvider>
       </body>
     </html>

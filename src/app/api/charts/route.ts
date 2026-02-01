@@ -14,8 +14,15 @@ export async function GET(request: Request) {
             orderBy: { date: "asc" },
         });
 
+        const source = searchParams.get("source") || "GASGOO";
+
         const salesRecords = await prisma.salesRecord.findMany({
-            where: { companyId, periodType },
+            where: {
+                companyId,
+                periodType,
+                volume: { gt: 0 }, // 排除无效的零值数据
+                source
+            },
             orderBy: { date: "asc" },
         });
 
@@ -23,7 +30,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "未找到数据" }, { status: 404 });
         }
 
-        const baselinePrice = stockPrices[0].closePrice;
+        const baselinePrice = stockPrices[0]?.closePrice || 1;
         const firstSales = salesRecords[0];
         const baselineSales = firstSales ? firstSales.volume : 1;
 

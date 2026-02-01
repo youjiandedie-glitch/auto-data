@@ -35,7 +35,8 @@ model SalesRecord {
   company      Company  @relation(fields: [companyId], references: [id])
   date         DateTime
   volume       Int
+  source       String   @default("GASGOO") // GASGOO, CPCA
   periodType   String   // WEEK, MONTH, YEAR
   
-  @@unique([companyId, date, periodType])
+  @@unique([companyId, date, periodType, source])
 }

@@ -1,75 +1,55 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addCompany, removeCompany } from "@/store/slices/chartSlice";
-import { Search, X, Check } from "lucide-react";
+import { setSelectedCompany } from "@/store/slices/chartSlice";
+import { ChevronDown } from "lucide-react";
 
 const CompanyPicker = () => {
     const dispatch = useAppDispatch();
     const selectedCompanies = useAppSelector(state => state.chart.selectedCompanies);
     const [availableCompanies, setAvailableCompanies] = useState<any[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         fetch("/api/companies")
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    setAvailableCompanies(data);
-                    if (selectedCompanies.length === 0 && data.length > 0) {
-                        const first = data[0];
-                        dispatch(addCompany({ id: first.id, name: first.name, symbol: first.stockSymbol }));
+                    // Sort by name for easier finding in dropdown
+                    const sorted = data.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+                    setAvailableCompanies(sorted);
+
+                    if (selectedCompanies.length === 0 && sorted.length > 0) {
+                        const first = sorted[0];
+                        dispatch(setSelectedCompany({ id: first.id, name: first.name, symbol: first.stockSymbol }));
                     }
                 }
             });
     }, [dispatch, selectedCompanies.length]);
 
-    const toggleCompany = (company: any) => {
-        const isSelected = selectedCompanies.find(c => c.id === company.id);
-        if (isSelected) {
-            if (selectedCompanies.length > 1) {
-                dispatch(removeCompany(company.id));
-            }
-        } else {
-            dispatch(addCompany({ id: company.id, name: company.name, symbol: company.stockSymbol }));
+    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const companyId = e.target.value;
+        const company = availableCompanies.find(c => c.id === companyId);
+        if (company) {
+            dispatch(setSelectedCompany({ id: company.id, name: company.name, symbol: company.stockSymbol }));
         }
     };
 
-    return (
-        <div className="flex flex-col gap-4">
-            <div className="relative group">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                    <Search size={18} />
-                </div>
-                <input
-                    type="text"
-                    placeholder="搜索中国汽车品牌..."
-                    className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
+    const currentId = selectedCompanies[0]?.id || "";
 
-            <div className="flex flex-wrap gap-2">
-                {availableCompanies
-                    .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map((company) => {
-                        const isSelected = selectedCompanies.find(sc => sc.id === company.id);
-                        return (
-                            <button
-                                key={company.id}
-                                onClick={() => toggleCompany(company)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-xs font-medium ${isSelected
-                                        ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
-                                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                                    }`}
-                            >
-                                {isSelected && <Check size={14} />}
-                                {company.name}
-                            </button>
-                        );
-                    })}
+    return (
+        <div className="relative w-full">
+            <select
+                value={currentId}
+                onChange={handleChange}
+                className="w-full appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-sm shadow-sm cursor-pointer hover:border-slate-300"
+            >
+                {availableCompanies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                        {company.name} ({company.stockSymbol})
+                    </option>
+                ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
+                <ChevronDown size={16} />
             </div>
         </div>
     );

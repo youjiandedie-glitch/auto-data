@@ -66,28 +66,35 @@ export async function syncSalesWithAkShare(source: "GASGOO" | "CPCA" | "GASGOO_M
                             modelId = model.id;
                         }
 
-                        await (prisma as any).salesRecord.upsert({
-                            where: {
-                                companyId_modelId_date_periodType_source: {
+                        const whereCondition = {
+                            companyId: company.id,
+                            modelId: modelId,
+                            date: date,
+                            periodType: "MONTH",
+                            source: source === "GASGOO_MODELS" ? "GASGOO" : source
+                        };
+
+                        const existingRecord = await prisma.salesRecord.findFirst({
+                            where: whereCondition
+                        });
+
+                        if (existingRecord) {
+                            await prisma.salesRecord.update({
+                                where: { id: existingRecord.id },
+                                data: { volume: volume }
+                            });
+                        } else {
+                            await prisma.salesRecord.create({
+                                data: {
                                     companyId: company.id,
                                     modelId: modelId,
                                     date: date,
+                                    volume: volume,
                                     periodType: "MONTH",
                                     source: source === "GASGOO_MODELS" ? "GASGOO" : source
-                                },
-                            },
-                            update: {
-                                volume: volume,
-                            },
-                            create: {
-                                companyId: company.id,
-                                modelId: modelId,
-                                date: date,
-                                volume: volume,
-                                periodType: "MONTH",
-                                source: source === "GASGOO_MODELS" ? "GASGOO" : source
-                            },
-                        });
+                                }
+                            });
+                        }
                         syncedCount++;
                     }
                 }
@@ -131,25 +138,32 @@ export async function generateMockSales(companyId: string) {
 
     let count = 0;
     for (const record of records) {
-        await (prisma as any).salesRecord.upsert({
-            where: {
-                companyId_modelId_date_periodType_source: {
-                    companyId: record.companyId,
+        const whereCondition = {
+            companyId: record.companyId,
+            modelId: null,
+            date: record.date,
+            periodType: record.periodType,
+            source: "GASGOO"
+        };
+
+        const existingRecord = await prisma.salesRecord.findFirst({
+            where: whereCondition
+        });
+
+        if (existingRecord) {
+            await prisma.salesRecord.update({
+                where: { id: existingRecord.id },
+                data: { volume: record.volume }
+            });
+        } else {
+            await prisma.salesRecord.create({
+                data: {
+                    ...record,
                     modelId: null,
-                    date: record.date,
-                    periodType: record.periodType,
                     source: "GASGOO"
                 }
-            },
-            update: {
-                volume: record.volume
-            },
-            create: {
-                ...record,
-                modelId: null,
-                source: "GASGOO"
-            }
-        });
+            });
+        }
         count++;
     }
 

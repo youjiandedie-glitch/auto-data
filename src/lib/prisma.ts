@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { Pool, neonConfig } from '@neondatabase/serverless';
-import { PrismaClient } from "@prisma/client";
-import { Pool, neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 
 // Required for Neon serverless driver to work in non-edge environments (like local Node.js)

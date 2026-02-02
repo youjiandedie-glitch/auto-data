@@ -13,10 +13,13 @@ export async function GET() {
         const results = await Promise.all(companies.map(async (company: any) => {
             try {
                 // 1. Fetch Basic Quote from Yahoo Finance
-                const quote: any = await yahooFinance.quote(company.stockSymbol!).catch(err => {
+                let quote: any = null;
+                try {
+                    quote = await yahooFinance.quote(company.stockSymbol!);
+                } catch (err) {
                     console.error(`Quote fetch failed for ${company.stockSymbol}:`, err);
-                    return null;
-                });
+                    quote = null;
+                }
 
                 if (!quote) return null;
 
@@ -50,9 +53,14 @@ export async function GET() {
                 };
 
                 try {
-                    const summary: any = await yahooFinance.quoteSummary(company.stockSymbol!, {
-                        modules: ["financialData", "incomeStatementHistory"]
-                    }).catch(() => null);
+                    let summary: any = null;
+                    try {
+                        summary = await yahooFinance.quoteSummary(company.stockSymbol!, {
+                            modules: ["financialData", "incomeStatementHistory"]
+                        });
+                    } catch (e) {
+                        summary = null;
+                    }
 
                     if (summary) {
                         const fd = summary.financialData || {};
